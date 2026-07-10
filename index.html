@@ -157,21 +157,22 @@
     }
     .nav-icons i:hover { color: var(--primary-sky); transform: scale(1.08); }
     
-    .cart-badge {
+    .badge-icon {
       position: absolute;
       top: -8px;
       right: -8px;
       background: var(--soft-orange);
       color: white;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 700;
-      width: 20px;
-      height: 20px;
+      min-width: 18px;
+      height: 18px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: var(--transition);
+      padding: 0 4px;
     }
 
     .hamburger {
@@ -181,6 +182,94 @@
       background: none;
       border: none;
       color: var(--text);
+    }
+
+    /* ===== SEARCH BAR ===== */
+    .search-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 100px;
+    }
+    .search-overlay.active {
+      display: flex;
+    }
+    .search-box {
+      background: white;
+      border-radius: var(--radius);
+      padding: 30px;
+      max-width: 600px;
+      width: 90%;
+      position: relative;
+      animation: slideUp 0.3s ease;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 60px;
+      font-size: 1.1rem;
+      font-family: var(--font-primary);
+      transition: var(--transition);
+    }
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary-sky);
+      box-shadow: 0 0 0 4px rgba(79,195,247,0.1);
+    }
+    .search-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: #999;
+      transition: var(--transition);
+    }
+    .search-close:hover { color: var(--text); transform: rotate(90deg); }
+    .search-results {
+      margin-top: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .search-result-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: var(--transition);
+    }
+    .search-result-item:hover {
+      background: var(--light-bg);
+    }
+    .search-result-item img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+    }
+    .search-result-item .name {
+      font-weight: 600;
+    }
+    .search-result-item .price {
+      color: var(--soft-orange);
+      font-weight: 700;
+    }
+    .search-no-results {
+      text-align: center;
+      padding: 30px 0;
+      color: #999;
     }
 
     /* ===== HERO ===== */
@@ -446,6 +535,9 @@
       font-size: 1.2rem;
     }
     .product-actions i:hover { color: var(--cute-pink); transform: scale(1.1); }
+    .product-actions .wishlist-active {
+      color: var(--cute-pink);
+    }
     .btn-cart {
       background: var(--primary-sky);
       border: none;
@@ -792,6 +884,7 @@
       .collection-grid { grid-template-columns: 1fr 1fr; }
       .product-grid { grid-template-columns: 1fr 1fr; }
       .insta-grid { grid-template-columns: 1fr 1fr; }
+      .search-box { padding: 20px; }
     }
     /* glassmorphism hint */
     .glass { background: rgba(255,255,255,0.3); backdrop-filter: blur(4px); }
@@ -816,16 +909,47 @@
       <li><a href="#contact" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'}); return false;">Contact</a></li>
     </ul>
     <div class="nav-icons">
-      <i class="fas fa-search" onclick="alert('🔍 Search feature coming soon!')"></i>
-      <i class="far fa-heart" onclick="alert('❤️ Wishlist saved!')"></i>
-      <div style="position:relative;display:inline-block;">
-        <i class="fas fa-shopping-bag" onclick="toggleCart()"></i>
-        <span class="cart-badge" id="cartBadge">0</span>
+      <div style="position:relative;display:inline-block;cursor:pointer;" onclick="toggleSearch()">
+        <i class="fas fa-search"></i>
+      </div>
+      <div style="position:relative;display:inline-block;cursor:pointer;" onclick="toggleWishlist()">
+        <i class="fas fa-heart"></i>
+        <span class="badge-icon" id="wishlistBadge">0</span>
+      </div>
+      <div style="position:relative;display:inline-block;cursor:pointer;" onclick="toggleCart()">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="badge-icon" id="cartBadge">0</span>
       </div>
       <button class="hamburger" id="hamburger" aria-label="Menu"><i class="fas fa-bars"></i></button>
     </div>
   </div>
 </nav>
+
+<!-- ===== SEARCH OVERLAY ===== -->
+<div class="search-overlay" id="searchOverlay" onclick="if(event.target===this) toggleSearch()">
+  <div class="search-box">
+    <button class="search-close" onclick="toggleSearch()">&times;</button>
+    <input type="text" id="searchInput" placeholder="Search for products..." oninput="performSearch()" />
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
+
+<!-- ===== WISHLIST POPUP ===== -->
+<div class="cart-overlay" id="wishlistOverlay" onclick="if(event.target===this) toggleWishlist()">
+  <div class="cart-popup">
+    <div class="cart-popup-header">
+      <h2><i class="fas fa-heart" style="color:var(--cute-pink);"></i> Your Wishlist</h2>
+      <button class="cart-close" onclick="toggleWishlist()">&times;</button>
+    </div>
+    <div id="wishlistItems">
+      <div class="cart-empty">
+        <i class="fas fa-heart" style="color:#ddd;"></i>
+        <p>Your wishlist is empty</p>
+        <p style="font-size:0.9rem;color:#bbb;">Save your favorite items!</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ===== HERO ===== -->
 <section class="hero" id="home">
@@ -995,47 +1119,158 @@
 
 <script>
   (function() {
-    // ===== CART SYSTEM =====
-    let cart = [];
-    let cartItems = {};
-    
+    // ===== DATA STORES =====
+    let cart = {};
+    let wishlist = {};
+    let products = [];
+
     // ===== COLLECTION CLICK HANDLER =====
     window.handleCollectionClick = function(message) {
       alert('🛍️ ' + message);
     };
 
-    // ===== ADD TO CART FUNCTION =====
-    window.addToCart = function(productName, price, img) {
-      // Check if product already in cart
-      if (cartItems[productName]) {
-        cartItems[productName].quantity += 1;
+    // ===== SEARCH FUNCTIONALITY =====
+    window.toggleSearch = function() {
+      const overlay = document.getElementById('searchOverlay');
+      overlay.classList.toggle('active');
+      if (overlay.classList.contains('active')) {
+        setTimeout(() => document.getElementById('searchInput').focus(), 100);
+      }
+    };
+
+    window.performSearch = function() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      const resultsContainer = document.getElementById('searchResults');
+      
+      if (!query) {
+        resultsContainer.innerHTML = '';
+        return;
+      }
+
+      const filtered = products.filter(p => 
+        p.name.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        resultsContainer.innerHTML = `
+          <div class="search-no-results">
+            <i class="fas fa-search" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
+            <p>No products found for "${query}"</p>
+          </div>
+        `;
+        return;
+      }
+
+      resultsContainer.innerHTML = filtered.map(p => `
+        <div class="search-result-item" onclick="document.getElementById('shop').scrollIntoView({behavior:'smooth'}); toggleSearch();">
+          <img src="${p.img}" alt="${p.name}">
+          <div>
+            <div class="name">${p.name}</div>
+            <div class="price">₹${p.price.toFixed(2)}</div>
+          </div>
+        </div>
+      `).join('');
+    };
+
+    // ===== WISHLIST FUNCTIONALITY =====
+    window.toggleWishlist = function() {
+      const overlay = document.getElementById('wishlistOverlay');
+      overlay.classList.toggle('active');
+      renderWishlist();
+    };
+
+    window.toggleWishlistItem = function(productName, price, img) {
+      if (wishlist[productName]) {
+        delete wishlist[productName];
+        showToast('❤️ Removed ' + productName + ' from wishlist');
       } else {
-        cartItems[productName] = {
+        wishlist[productName] = { name: productName, price: price, img: img };
+        showToast('❤️ Added ' + productName + ' to wishlist!');
+      }
+      renderWishlist();
+      updateWishlistBadge();
+      updateProductWishlistIcons();
+    };
+
+    function renderWishlist() {
+      const container = document.getElementById('wishlistItems');
+      const count = Object.keys(wishlist).length;
+      
+      if (count === 0) {
+        container.innerHTML = `
+          <div class="cart-empty">
+            <i class="fas fa-heart" style="color:#ddd;"></i>
+            <p>Your wishlist is empty</p>
+            <p style="font-size:0.9rem;color:#bbb;">Save your favorite items!</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      for (let key in wishlist) {
+        const item = wishlist[key];
+        html += `
+          <div class="cart-item">
+            <img src="${item.img}" alt="${item.name}">
+            <div class="cart-item-details">
+              <h4>${item.name}</h4>
+              <div class="price">₹${item.price.toFixed(2)}</div>
+            </div>
+            <button class="cart-item-remove" onclick="toggleWishlistItem('${item.name}', ${item.price}, '${item.img}')">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function updateWishlistBadge() {
+      const count = Object.keys(wishlist).length;
+      document.getElementById('wishlistBadge').textContent = count;
+    }
+
+    function updateProductWishlistIcons() {
+      document.querySelectorAll('.product-card').forEach(card => {
+        const name = card.querySelector('.product-name')?.textContent;
+        if (name && wishlist[name]) {
+          const heart = card.querySelector('.fa-heart');
+          if (heart) heart.style.color = 'var(--cute-pink)';
+        }
+      });
+    }
+
+    // ===== CART FUNCTIONALITY =====
+    window.addToCart = function(productName, price, img) {
+      if (cart[productName]) {
+        cart[productName].quantity += 1;
+      } else {
+        cart[productName] = {
           name: productName,
           price: price,
           img: img,
           quantity: 1
         };
       }
-      updateCartUI();
-      alert('🛒 Added ' + productName + ' to cart!');
+      renderCart();
+      updateCartBadge();
+      showToast('🛒 Added ' + productName + ' to cart!');
     };
 
-    // ===== REMOVE FROM CART =====
     window.removeFromCart = function(productName) {
-      if (cartItems[productName]) {
-        if (cartItems[productName].quantity > 1) {
-          cartItems[productName].quantity -= 1;
+      if (cart[productName]) {
+        if (cart[productName].quantity > 1) {
+          cart[productName].quantity -= 1;
         } else {
-          delete cartItems[productName];
+          delete cart[productName];
         }
-        updateCartUI();
+        renderCart();
+        updateCartBadge();
       }
     };
 
-    // ===== UPDATE CART UI =====
-    function updateCartUI() {
-      const badge = document.getElementById('cartBadge');
+    function renderCart() {
       const cartContainer = document.getElementById('cartItems');
       const totalContainer = document.getElementById('cartTotal');
       const totalPriceEl = document.getElementById('totalPrice');
@@ -1043,16 +1278,11 @@
       let totalItems = 0;
       let totalPrice = 0;
       
-      // Count total items
-      for (let key in cartItems) {
-        totalItems += cartItems[key].quantity;
-        totalPrice += cartItems[key].price * cartItems[key].quantity;
+      for (let key in cart) {
+        totalItems += cart[key].quantity;
+        totalPrice += cart[key].price * cart[key].quantity;
       }
       
-      // Update badge
-      badge.textContent = totalItems;
-      
-      // Update cart items display
       if (totalItems === 0) {
         cartContainer.innerHTML = `
           <div class="cart-empty">
@@ -1064,8 +1294,8 @@
         totalContainer.style.display = 'none';
       } else {
         let html = '';
-        for (let key in cartItems) {
-          const item = cartItems[key];
+        for (let key in cart) {
+          const item = cart[key];
           html += `
             <div class="cart-item">
               <img src="${item.img}" alt="${item.name}">
@@ -1085,30 +1315,66 @@
       }
     }
 
-    // ===== TOGGLE CART =====
+    function updateCartBadge() {
+      let total = 0;
+      for (let key in cart) {
+        total += cart[key].quantity;
+      }
+      document.getElementById('cartBadge').textContent = total;
+    }
+
     window.toggleCart = function() {
       const overlay = document.getElementById('cartOverlay');
       overlay.classList.toggle('active');
     };
 
-    // ===== CHECKOUT =====
     window.checkout = function() {
       let totalItems = 0;
-      for (let key in cartItems) {
-        totalItems += cartItems[key].quantity;
+      for (let key in cart) {
+        totalItems += cart[key].quantity;
       }
       if (totalItems === 0) {
         alert('⚠️ Your cart is empty!');
         return;
       }
       alert('✅ Order placed successfully! Total items: ' + totalItems + '\nThank you for shopping at Little One! 👶');
-      cartItems = {};
-      updateCartUI();
+      cart = {};
+      renderCart();
+      updateCartBadge();
       toggleCart();
     };
 
-    // ===== PRODUCT DATA (prices in ₹) =====
-    const products = [
+    // ===== TOAST NOTIFICATION =====
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 60px;
+        font-family: var(--font-primary);
+        font-weight: 600;
+        z-index: 9999;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        animation: slideUp 0.3s ease;
+        max-width: 90%;
+        text-align: center;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // ===== PRODUCT DATA =====
+    const productData = [
       { name: "Cotton Romper", price: 2499, old: 4500, rating: 5, img: "https://picsum.photos/seed/p1/300/300" },
       { name: "Polo T-Shirt", price: 1899, old: 2800, rating: 4, img: "https://picsum.photos/seed/p2/300/300" },
       { name: "Denim Overall", price: 3999, old: 5900, rating: 5, img: "https://picsum.photos/seed/p3/300/300" },
@@ -1123,30 +1389,38 @@
       { name: "Pajama Set", price: 2499, old: 3800, rating: 4, img: "https://picsum.photos/seed/p12/300/300" }
     ];
 
-    const grid = document.getElementById('productGrid');
-    if (grid) {
-      grid.innerHTML = products.map((p, index) => `
-        <div class="product-card">
-          <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" onclick="alert('🛍️ View ${p.name} - ₹${p.price}')" />
-          <div class="product-info">
-            <div class="product-name">${p.name}</div>
-            <div class="rating">${'★'.repeat(p.rating)}${'☆'.repeat(5-p.rating)}</div>
-            <div class="product-price">
-              <span class="price-new">₹${p.price.toFixed(2)}</span>
-              <span class="price-old">₹${p.old.toFixed(2)}</span>
-              <span class="badge-discount">${Math.round((1 - p.price/p.old)*100)}% OFF</span>
-            </div>
-            <div class="size-selector"><span>2-3Y</span><span>3-4Y</span><span>4-5Y</span></div>
-            <div class="product-actions">
-              <button class="btn-cart" onclick="addToCart('${p.name}', ${p.price}, '${p.img}')"><i class="fas fa-cart-plus"></i> Add</button>
-              <div>
-                <i class="far fa-heart" onclick="event.stopPropagation(); alert('❤️ ${p.name} added to wishlist!')"></i>
-                <i class="far fa-eye" onclick="event.stopPropagation(); alert('👀 Quick view: ${p.name} - ₹${p.price}')"></i>
+    products = productData;
+
+    // ===== RENDER PRODUCTS =====
+    function renderProducts() {
+      const grid = document.getElementById('productGrid');
+      if (!grid) return;
+
+      grid.innerHTML = products.map((p) => {
+        const inWishlist = wishlist[p.name] ? 'style="color:var(--cute-pink);"' : '';
+        return `
+          <div class="product-card">
+            <img class="product-img" src="${p.img}" alt="${p.name}" loading="lazy" onclick="alert('🛍️ View ${p.name} - ₹${p.price}')" />
+            <div class="product-info">
+              <div class="product-name">${p.name}</div>
+              <div class="rating">${'★'.repeat(p.rating)}${'☆'.repeat(5-p.rating)}</div>
+              <div class="product-price">
+                <span class="price-new">₹${p.price.toFixed(2)}</span>
+                <span class="price-old">₹${p.old.toFixed(2)}</span>
+                <span class="badge-discount">${Math.round((1 - p.price/p.old)*100)}% OFF</span>
+              </div>
+              <div class="size-selector"><span>2-3Y</span><span>3-4Y</span><span>4-5Y</span></div>
+              <div class="product-actions">
+                <button class="btn-cart" onclick="addToCart('${p.name}', ${p.price}, '${p.img}')"><i class="fas fa-cart-plus"></i> Add</button>
+                <div>
+                  <i class="fas fa-heart" onclick="event.stopPropagation(); toggleWishlistItem('${p.name}', ${p.price}, '${p.img}')" ${inWishlist}></i>
+                  <i class="far fa-eye" onclick="event.stopPropagation(); alert('👀 Quick view: ${p.name} - ₹${p.price}')"></i>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     // ===== HAMBURGER =====
@@ -1186,7 +1460,6 @@
     // ===== AUTO SLIDE REVIEWS =====
     const slider = document.getElementById('reviewSlider');
     if (slider) {
-      let scrollAmount = 0;
       setInterval(() => {
         if (slider.scrollLeft + slider.clientWidth >= slider.scrollWidth) {
           slider.scrollTo({ left: 0, behavior: 'smooth' });
@@ -1206,6 +1479,23 @@
         alert('⚠️ Please enter a valid email address.');
       }
     };
+
+    // ===== CLOSE SEARCH ON ESC =====
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const searchOverlay = document.getElementById('searchOverlay');
+        if (searchOverlay.classList.contains('active')) {
+          toggleSearch();
+        }
+      }
+    });
+
+    // ===== INIT =====
+    renderProducts();
+    renderCart();
+    renderWishlist();
+    updateCartBadge();
+    updateWishlistBadge();
 
     console.log('✨ Little One – ready for little smiles!');
   })();
