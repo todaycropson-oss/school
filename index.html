@@ -148,6 +148,7 @@
       align-items: center;
       gap: 18px;
       font-size: 1.2rem;
+      position: relative;
     }
     .nav-icons i {
       cursor: pointer;
@@ -155,6 +156,23 @@
       color: #444;
     }
     .nav-icons i:hover { color: var(--primary-sky); transform: scale(1.08); }
+    
+    .cart-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--soft-orange);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
 
     .hamburger {
       display: none;
@@ -460,6 +478,127 @@
       cursor: default;
     }
 
+    /* ===== CART POPUP ===== */
+    .cart-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .cart-overlay.active {
+      display: flex;
+    }
+    .cart-popup {
+      background: white;
+      border-radius: var(--radius);
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .cart-popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 15px;
+    }
+    .cart-popup-header h2 {
+      font-family: var(--font-secondary);
+      font-weight: 800;
+    }
+    .cart-close {
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      cursor: pointer;
+      color: #999;
+      transition: var(--transition);
+    }
+    .cart-close:hover { color: var(--text); transform: rotate(90deg); }
+    .cart-item {
+      display: flex;
+      gap: 15px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+      align-items: center;
+    }
+    .cart-item img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+    }
+    .cart-item-details {
+      flex: 1;
+    }
+    .cart-item-details h4 {
+      font-family: var(--font-secondary);
+      font-weight: 600;
+    }
+    .cart-item-details .price {
+      color: var(--soft-orange);
+      font-weight: 700;
+    }
+    .cart-item-remove {
+      background: none;
+      border: none;
+      color: #ff4444;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: var(--transition);
+    }
+    .cart-item-remove:hover { transform: scale(1.2); }
+    .cart-total {
+      margin-top: 20px;
+      text-align: right;
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding-top: 15px;
+      border-top: 2px solid #f0f0f0;
+    }
+    .cart-empty {
+      text-align: center;
+      padding: 30px 0;
+      color: #999;
+    }
+    .cart-empty i {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .checkout-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      background: var(--primary-sky);
+      color: white;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: var(--transition);
+    }
+    .checkout-btn:hover {
+      background: #29b6f6;
+      transform: scale(1.02);
+    }
+
     /* ===== FEATURES ===== */
     .features-grid {
       display: grid;
@@ -679,7 +818,10 @@
     <div class="nav-icons">
       <i class="fas fa-search" onclick="alert('🔍 Search feature coming soon!')"></i>
       <i class="far fa-heart" onclick="alert('❤️ Wishlist saved!')"></i>
-      <i class="fas fa-shopping-bag" onclick="alert('🛒 Your cart is ready!')"></i>
+      <div style="position:relative;display:inline-block;">
+        <i class="fas fa-shopping-bag" onclick="toggleCart()"></i>
+        <span class="cart-badge" id="cartBadge">0</span>
+      </div>
       <button class="hamburger" id="hamburger" aria-label="Menu"><i class="fas fa-bars"></i></button>
     </div>
   </div>
@@ -758,6 +900,29 @@
   </div>
 </section>
 
+<!-- ===== CART POPUP ===== -->
+<div class="cart-overlay" id="cartOverlay" onclick="if(event.target===this) toggleCart()">
+  <div class="cart-popup">
+    <div class="cart-popup-header">
+      <h2><i class="fas fa-shopping-bag"></i> Your Cart</h2>
+      <button class="cart-close" onclick="toggleCart()">&times;</button>
+    </div>
+    <div id="cartItems">
+      <div class="cart-empty">
+        <i class="fas fa-shopping-bag"></i>
+        <p>Your cart is empty</p>
+        <p style="font-size:0.9rem;color:#bbb;">Start shopping to add items!</p>
+      </div>
+    </div>
+    <div id="cartTotal" style="display:none;">
+      <div class="cart-total">
+        Total: <span id="totalPrice">₹0.00</span>
+      </div>
+      <button class="checkout-btn" onclick="checkout()"><i class="fas fa-credit-card"></i> Proceed to Checkout</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===== WHY PARENTS LOVE ===== -->
 <section class="container" style="margin-top:40px">
   <div class="section-header reveal"><h2 class="section-title">Why Parents Love Little One</h2></div>
@@ -830,9 +995,116 @@
 
 <script>
   (function() {
+    // ===== CART SYSTEM =====
+    let cart = [];
+    let cartItems = {};
+    
     // ===== COLLECTION CLICK HANDLER =====
     window.handleCollectionClick = function(message) {
       alert('🛍️ ' + message);
+    };
+
+    // ===== ADD TO CART FUNCTION =====
+    window.addToCart = function(productName, price, img) {
+      // Check if product already in cart
+      if (cartItems[productName]) {
+        cartItems[productName].quantity += 1;
+      } else {
+        cartItems[productName] = {
+          name: productName,
+          price: price,
+          img: img,
+          quantity: 1
+        };
+      }
+      updateCartUI();
+      alert('🛒 Added ' + productName + ' to cart!');
+    };
+
+    // ===== REMOVE FROM CART =====
+    window.removeFromCart = function(productName) {
+      if (cartItems[productName]) {
+        if (cartItems[productName].quantity > 1) {
+          cartItems[productName].quantity -= 1;
+        } else {
+          delete cartItems[productName];
+        }
+        updateCartUI();
+      }
+    };
+
+    // ===== UPDATE CART UI =====
+    function updateCartUI() {
+      const badge = document.getElementById('cartBadge');
+      const cartContainer = document.getElementById('cartItems');
+      const totalContainer = document.getElementById('cartTotal');
+      const totalPriceEl = document.getElementById('totalPrice');
+      
+      let totalItems = 0;
+      let totalPrice = 0;
+      
+      // Count total items
+      for (let key in cartItems) {
+        totalItems += cartItems[key].quantity;
+        totalPrice += cartItems[key].price * cartItems[key].quantity;
+      }
+      
+      // Update badge
+      badge.textContent = totalItems;
+      
+      // Update cart items display
+      if (totalItems === 0) {
+        cartContainer.innerHTML = `
+          <div class="cart-empty">
+            <i class="fas fa-shopping-bag"></i>
+            <p>Your cart is empty</p>
+            <p style="font-size:0.9rem;color:#bbb;">Start shopping to add items!</p>
+          </div>
+        `;
+        totalContainer.style.display = 'none';
+      } else {
+        let html = '';
+        for (let key in cartItems) {
+          const item = cartItems[key];
+          html += `
+            <div class="cart-item">
+              <img src="${item.img}" alt="${item.name}">
+              <div class="cart-item-details">
+                <h4>${item.name}</h4>
+                <div class="price">₹${item.price.toFixed(2)} × ${item.quantity}</div>
+              </div>
+              <button class="cart-item-remove" onclick="removeFromCart('${item.name}')">
+                <i class="fas fa-minus-circle"></i>
+              </button>
+            </div>
+          `;
+        }
+        cartContainer.innerHTML = html;
+        totalContainer.style.display = 'block';
+        totalPriceEl.textContent = '₹' + totalPrice.toFixed(2);
+      }
+    }
+
+    // ===== TOGGLE CART =====
+    window.toggleCart = function() {
+      const overlay = document.getElementById('cartOverlay');
+      overlay.classList.toggle('active');
+    };
+
+    // ===== CHECKOUT =====
+    window.checkout = function() {
+      let totalItems = 0;
+      for (let key in cartItems) {
+        totalItems += cartItems[key].quantity;
+      }
+      if (totalItems === 0) {
+        alert('⚠️ Your cart is empty!');
+        return;
+      }
+      alert('✅ Order placed successfully! Total items: ' + totalItems + '\nThank you for shopping at Little One! 👶');
+      cartItems = {};
+      updateCartUI();
+      toggleCart();
     };
 
     // ===== PRODUCT DATA (prices in ₹) =====
@@ -866,7 +1138,7 @@
             </div>
             <div class="size-selector"><span>2-3Y</span><span>3-4Y</span><span>4-5Y</span></div>
             <div class="product-actions">
-              <button class="btn-cart" onclick="alert('🛒 Added ${p.name} to cart!')"><i class="fas fa-cart-plus"></i> Add</button>
+              <button class="btn-cart" onclick="addToCart('${p.name}', ${p.price}, '${p.img}')"><i class="fas fa-cart-plus"></i> Add</button>
               <div>
                 <i class="far fa-heart" onclick="event.stopPropagation(); alert('❤️ ${p.name} added to wishlist!')"></i>
                 <i class="far fa-eye" onclick="event.stopPropagation(); alert('👀 Quick view: ${p.name} - ₹${p.price}')"></i>
@@ -885,11 +1157,9 @@
         e.stopPropagation();
         navMenu.classList.toggle('active');
       });
-      // close on link click (mobile)
       navMenu.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => navMenu.classList.remove('active'));
       });
-      // close on outside click
       document.addEventListener('click', (e) => {
         if (!navMenu.contains(e.target) && e.target !== hamburger) {
           navMenu.classList.remove('active');
